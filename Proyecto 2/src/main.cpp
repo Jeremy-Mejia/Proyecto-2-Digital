@@ -42,6 +42,7 @@ int voltaje;
 
 void setup() {
   Serial.begin(115200);
+  Serial2.begin(115200);
 
   pinMode(Mic, INPUT);
   pinMode(led1, OUTPUT);
@@ -64,11 +65,12 @@ void setup() {
 
 void loop() {
   voltaje = analogRead(Mic);
+  //voltaje = map(voltaje, 0, 4095, 1, 10); 
   Serial.println(voltaje);
-  digitalWrite(led1, HIGH);
   
+  Serial2.write(voltaje);  
 
-  if (voltaje > 0 && voltaje <=22){
+  if (voltaje > 20 && voltaje <=25){
 
     digitalWrite(led1, HIGH);
     digitalWrite(led2, LOW);
@@ -77,7 +79,7 @@ void loop() {
     digitalWrite(led5, LOW);
   }
 
-  else if (voltaje > 22 && voltaje <= 25){
+  else if (voltaje > 25 && voltaje <= 30){
 
     digitalWrite(led1, HIGH);
     digitalWrite(led2, HIGH);
@@ -86,7 +88,7 @@ void loop() {
     digitalWrite(led5, LOW);
   }
 
-  else if (voltaje > 25 && voltaje <= 27){
+  else if (voltaje > 30 && voltaje <= 35){
 
     digitalWrite(led1, HIGH);
     digitalWrite(led2, HIGH);
@@ -95,7 +97,7 @@ void loop() {
     digitalWrite(led5, LOW);
   }
 
-  else if (voltaje > 27 && voltaje <= 30){
+  else if (voltaje > 35 && voltaje <= 40){
 
     digitalWrite(led1, HIGH);
     digitalWrite(led2, HIGH);
@@ -104,7 +106,7 @@ void loop() {
     digitalWrite(led5, LOW);
   }
 
-  else if (voltaje > 30 && voltaje <= 32){
+  else if (voltaje > 40 && voltaje <= 42){
 
     digitalWrite(led1, HIGH);
     digitalWrite(led2, HIGH);
