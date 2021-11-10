@@ -288,18 +288,18 @@ void readSD(void){
 // Función WriteSD
 //***************************************************************************************************************
 void writeSD(void){
-    archivo = SD.open("vúmetro.txt", FILE_WRITE);
+    archivo = SD.open("vumetro.txt", FILE_WRITE);
   
   if (archivo) {
-    Serial.print("Writing to vúmetro.txt...");
+    Serial.print("Writing to vumetro.txt...");
     
-    archivo.println(valor);
+    archivo.println(datodB);
     // close the file:
     archivo.close();
     Serial.println("done.");
   } else {
     // if the file didn't open, print an error:
-    Serial.println("error opening vúmetro.txt");
+    Serial.println("error opening vumetro.txt");
   }
   
   }
