@@ -130,7 +130,7 @@ void setup() {
   
   Serial.begin(115200);
   Serial2.begin(115200);
-/*
+  
   while (!Serial) {
     ; 
   }
@@ -144,9 +144,7 @@ void setup() {
     Serial.println("initialization failed!");
     return;
   }
-  Serial.println("initialization done.");*/
-
-  
+  Serial.println("initialization done.");
 
   //Pines de Salida
   pinMode(buzzerPin,OUTPUT);
@@ -154,7 +152,7 @@ void setup() {
   pinMode(btn2, INPUT_PULLUP);
 
   
-  //readSD();
+  readSD();
   
   
   SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
@@ -193,7 +191,7 @@ void loop() {
    
   if(digitalRead(btn2) == LOW){
     BTN2();
-    //writeSD();
+    writeSD();
     
    }
 
@@ -268,7 +266,7 @@ void loop() {
 //***************************************************************************************************************
 // Función ReadSD
 //***************************************************************************************************************
-/*
+
 void readSD(void){
   archivo = SD.open("vúmetro.txt");
   if (archivo) {
@@ -304,7 +302,7 @@ void writeSD(void){
     Serial.println("error opening vúmetro.txt");
   }
   
-  }*/
+  }
 
 //***************************************************************************************************************
 // Función BTN1
