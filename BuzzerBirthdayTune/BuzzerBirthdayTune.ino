@@ -37,7 +37,7 @@ pinMode(buzzerPin,OUTPUT);
 }
 void loop() 
 {
-  /*
+  
   for (int thisNote = 0; thisNote < 26; thisNote++) {
 
     // to calculate the note duration, take one second 
@@ -50,5 +50,5 @@ void loop()
     delay(pauseBetweenNotes);
     
     noTone(buzzerPin);              // stop the tone playing
-  }*/
+  }
 }

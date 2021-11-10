@@ -10,6 +10,8 @@
 //***************************************************************************************************************
 // Librerías
 //***************************************************************************************************************
+
+//Pantalla
 #include <stdint.h>
 #include <stdbool.h>
 #include <TM4C123GH6PM.h>
@@ -28,8 +30,13 @@
 #include "font.h"
 #include "lcd_registers.h"
 
-#include "pitches.h"
+//SD
+#include <SPI.h>
+#include <SD.h>
 
+
+#include "pitches.h"
+//Definición de Pines
 #define LCD_RST PD_0
 #define LCD_CS PD_1
 #define LCD_RS PD_2
@@ -48,9 +55,10 @@ int DPINS[] = {PB_0, PB_1, PB_2, PB_3, PB_4, PB_5, PB_6, PB_7};
 #define ledA PF_2
 #define ledV PF_3
 
+//Botones
 #define NOTE_C4_1 260
-#define btn1 PF_0
-#define btn2 PF_4
+#define btn1 PF_4
+#define btn2 PF_0
 
 //***************************************************************************************************************
 // Prototipo de Funciones
@@ -71,12 +79,18 @@ void LCD_Sprite(int x, int y, int width, int height, unsigned char bitmap[], int
 
 void BTN1(void);
 void BTN2(void);
+void Pantalla(void);
+
+//SD
+void writeSD(void);
+void readSD(void);
 
 extern uint8_t fondo[];
 
 //***************************************************************************************************************
 // Variables Globales
 //***************************************************************************************************************
+//Variables del vúmetro
 String T1 = "-22";
 String T2 = "-16";
 String T3 = "-12";
@@ -87,7 +101,16 @@ String T7 = "3";
 String T8 = "6";
 String T9 = "10";
 String T10 = "16";
+String datodB;
+
+
+File archivo; 
+
+//Valores globales
 int valor = 0; 
+int dB = 0;
+
+//Valores del Buzzer
 int buzzerPin = PF_1;
 int melody[] = {
    NOTE_C4_1, NOTE_D4};
@@ -104,12 +127,35 @@ int noteDurations[] = {
 
 
 void setup() {
-
-  Serial2.begin(115200);
   
+  Serial.begin(115200);
+  Serial2.begin(115200);
+/*
+  while (!Serial) {
+    ; 
+  }
+
+
+  Serial.print("Initializing SD card...");
+  pinMode(PA_3, OUTPUT);
+  SPI.setModule(0);
+
+  if (!SD.begin(PA_3)) {
+    Serial.println("initialization failed!");
+    return;
+  }
+  Serial.println("initialization done.");*/
+
+  
+
+  //Pines de Salida
   pinMode(buzzerPin,OUTPUT);
   pinMode(btn1, INPUT_PULLUP);
   pinMode(btn2, INPUT_PULLUP);
+
+  
+  //readSD();
+  
   
   SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
   Serial.begin(115200);
@@ -118,18 +164,6 @@ void setup() {
   LCD_Init();
   LCD_Clear(0x00);
   FillRect(0, 0, 240, 320, 0x0000);
-/*
-  
-  LCD_Print(T1, 288, 98, 1, 0xffff, 0x0000);
-  LCD_Print(T2, 256, 98, 1, 0xffff, 0x0000);
-  LCD_Print(T3, 224, 98, 1, 0xffff, 0x0000);
-  LCD_Print(T4, 192, 98, 1, 0xffff, 0x0000);
-  LCD_Print(T5, 160, 98, 1, 0xffff, 0x0000);
-  LCD_Print(T6, 128, 98, 1, 0xffff, 0x0000);
-  LCD_Print(T7, 96, 98, 1, 0xffff, 0x0000);
-  LCD_Print(T8, 64, 98, 1, 0xffff, 0x0000);
-  LCD_Print(T9, 32, 98, 1, 0xffff, 0x0000);
-  LCD_Print(T10, 0, 98, 1, 0xffff, 0x0000);*/
 
   LCD_Print(T1, 109, 298, 1, 0xffff, 0x0000);
   LCD_Print(T2, 109, 266, 1, 0xffff, 0x0000);
@@ -142,138 +176,6 @@ void setup() {
   LCD_Print(T9, 117, 42, 1, 0xffff, 0x0000);
   LCD_Print(T10, 117, 10, 1, 0xffff, 0x0000);
   
-  /*
-  //Fila 1
-  FillRect(0, 288, 48, 31, 0x07E0);
-  FillRect(49, 288, 48, 31, 0x07E0);
-  FillRect(147, 288, 48, 31, 0x07E0);
-  FillRect(196, 288, 48, 31, 0x07E0);
-
-  //Fila 2
-  FillRect(0, 256, 48, 31, 0x07E0);
-  FillRect(49, 256, 48, 31, 0x07E0);
-  FillRect(147, 256, 48, 31, 0x07E0);
-  FillRect(196, 256, 48, 31, 0x07E0);
-
-  //Fila 3
-  FillRect(0, 224, 48, 31, 0x07E0);
-  FillRect(49, 224, 48, 31, 0x07E0);
-  FillRect(147, 224, 48, 31, 0x07E0);
-  FillRect(196, 224, 48, 31, 0x07E0);
-
-  //Fila 4
-  FillRect(0, 192, 48, 31, 0x07E0);
-  FillRect(49, 192, 48, 31, 0x07E0);
-  FillRect(147, 192, 48, 31, 0x07E0);
-  FillRect(196, 192, 48, 31, 0x07E0);
-
-  //Fila 5
-  FillRect(0, 160, 48, 31, 0x07E0);
-  FillRect(49, 160, 48, 31, 0x07E0);
-  FillRect(147, 160, 48, 31, 0x07E0);
-  FillRect(196, 160, 48, 31, 0x07E0);
-
-  //Fila 6
-  FillRect(0, 128, 48, 31, 0x0FFF);
-  FillRect(49, 128, 48, 31, 0x0FFF);
-  FillRect(147, 128, 48, 31, 0x0FFF);
-  FillRect(196, 128, 48, 31, 0x0FFF);
-
-  //Fila 7
-  FillRect(0, 96, 48, 31, 0x0FFF);
-  FillRect(49, 96, 48, 31, 0x0FFF);
-  FillRect(147, 96, 48, 31, 0x0FFF);
-  FillRect(196, 96, 48, 31, 0x0FFF);
-
-  //Fila 8
-  FillRect(0, 64, 48, 31, 0x0FFF);
-  FillRect(49, 64, 48, 31, 0x0FFF);
-  FillRect(147, 64, 48, 31, 0x0FFF);
-  FillRect(196, 64, 48, 31, 0x0FFF);
-  
-  //Fila 9
-  FillRect(0, 32, 48, 31, 0x003F);
-  FillRect(49, 32, 48, 31, 0x003F);
-  FillRect(147, 32, 48, 31, 0x003F);
-  FillRect(196, 32, 48, 31, 0x003F);
-
-  //Fila 10
-  FillRect(0, 0, 48, 31, 0x003F);
-  FillRect(49, 0, 48, 31, 0x003F);
-  FillRect(147, 0, 48, 31, 0x003F);
-  FillRect(196, 0, 48, 31, 0x003F);*/
-   
-  
-  /*
-  //Fila 1
-  FillRect(288, 0, 31, 48, 0x07E0);
-  FillRect(288, 49, 31, 48, 0x07E0);
-  LCD_Print(T1, 288, 98, 1, 0xffff, 0x0000);
-  FillRect(288, 147, 31, 48, 0x07E0);
-  FillRect(288, 196, 31, 48, 0x07E0);
-
-  //Fila 2
-  FillRect(256, 0, 31, 48, 0x07E0);
-  FillRect(256, 49, 31, 48, 0x07E0);
-  LCD_Print(T2, 256, 98, 1, 0xffff, 0x0000);
-  FillRect(256, 147, 31, 48, 0x07E0);
-  FillRect(256, 196, 31, 48, 0x07E0);
-
-  //Fila 3
-  FillRect(224, 0, 31, 48, 0x07E0);
-  FillRect(224, 49, 31, 48, 0x07E0);
-  LCD_Print(T3, 224, 98, 1, 0xffff, 0x0000);
-  FillRect(224, 147, 31, 48, 0x07E0);
-  FillRect(224, 196, 31, 48, 0x07E0);
-
-  //Fila 4
-  FillRect(192, 0, 31, 48, 0x07E0);
-  FillRect(192, 49, 31, 48, 0x07E0);
-  LCD_Print(T4, 192, 98, 1, 0xffff, 0x0000);
-  FillRect(192, 147, 31, 48, 0x07E0);
-  FillRect(192, 196, 31, 48, 0x07E0);
-  
-  //Fila 5
-  FillRect(160, 0, 31, 48, 0x07E0);
-  FillRect(160, 49, 31, 48, 0x07E0);
-  LCD_Print(T5, 160, 98, 1, 0xffff, 0x0000);
-  FillRect(160, 147, 31, 48, 0x07E0);
-  FillRect(160, 196, 31, 48, 0x07E0);
-  
-  //Fila 6
-  FillRect(128, 0, 31, 48, 0xFF00);
-  FillRect(128, 49, 31, 48, 0xFF00);
-  LCD_Print(T6, 128, 98, 1, 0xffff, 0x0000);
-  FillRect(128, 147, 31, 48, 0xFF00);
-  FillRect(128, 196, 31, 48, 0xFF00);
-
-  //Fila 7
-  FillRect(96, 0, 31, 48, 0xFF00);
-  FillRect(96, 49, 31, 48, 0xFF00);
-  LCD_Print(T7, 96, 98, 1, 0xffff, 0x0000);
-  FillRect(96, 147, 31, 48, 0xFF00);
-  FillRect(96, 196, 31, 48, 0xFF00);
-
-  //Fila 8
-  FillRect(64, 0, 31, 48, 0xFF00);
-  FillRect(64, 49, 31, 48, 0xFF00);
-  LCD_Print(T8, 64, 98, 1, 0xffff, 0x0000);
-  FillRect(64, 147, 31, 48, 0xFF00);
-  FillRect(64, 196, 31, 48, 0xFF00);
-
-  //Fila 9
-  FillRect(32, 0, 31, 48, 0xF000);
-  FillRect(32, 49, 31, 48, 0xF000);
-  LCD_Print(T9, 32, 98, 1, 0xffff, 0x0000);
-  FillRect(32, 147, 31, 48, 0xF000);
-  FillRect(32, 196, 31, 48, 0xF000);
-
-  //Fila 10
-  FillRect(0, 0, 31, 48, 0xF000);
-  FillRect(0, 49, 31, 48, 0xF000);
-  LCD_Print(T10, 0, 98, 1, 0xffff, 0x0000);
-  FillRect(0, 147, 31, 48, 0xF000);
-  FillRect(0, 196, 31, 48, 0xF000);*/
   }
 
 //***************************************************************************************************************
@@ -285,38 +187,190 @@ void loop() {
 
   if(digitalRead(btn1) == LOW){
     BTN1();
+    Pantalla();
      
    }
    
   if(digitalRead(btn2) == LOW){
     BTN2();
+    //writeSD();
     
    }
 
-
-  
   if(Serial2.available() > 0){
-    valor = Serial2.read();
-    //analogWrite(ledR, valor);   
-    Serial.println(valor);
+    valor = Serial2.read(); 
+    
+    
+  }
+  //Fila 1
+  FillRect(0, 288, 48, 31, 0x0000);
+  FillRect(49, 288, 48, 31, 0x0000);
+  FillRect(147, 288, 48, 31, 0x0000);
+  FillRect(196, 288, 48, 31, 0x0000);
+
+  //Fila 2
+  FillRect(0, 256, 48, 31, 0x0000);
+  FillRect(49, 256, 48, 31, 0x0000);
+  FillRect(147, 256, 48, 31, 0x0000);
+  FillRect(196, 256, 48, 31, 0x0000);
+
+  //Fila 3
+  FillRect(0, 224, 48, 31, 0x0000);
+  FillRect(49, 224, 48, 31, 0x0000);
+  FillRect(147, 224, 48, 31, 0x0000);
+  FillRect(196, 224, 48, 31, 0x0000);
+
+  //Fila 4
+  FillRect(0, 192, 48, 31, 0x0000);
+  FillRect(49, 192, 48, 31, 0x0000);
+  FillRect(147, 192, 48, 31, 0x0000);
+  FillRect(196, 192, 48, 31, 0x0000);
+
+  //Fila 5
+  FillRect(0, 160, 48, 31, 0x0000);
+  FillRect(49, 160, 48, 31, 0x0000);
+  FillRect(147, 160, 48, 31, 0x0000);
+  FillRect(196, 160, 48, 31, 0x0000);
+
+  //Fila 6
+  FillRect(0, 128, 48, 31, 0x0000);
+  FillRect(49, 128, 48, 31, 0x0000);
+  FillRect(147, 128, 48, 31, 0x0000);
+  FillRect(196, 128, 48, 31, 0x0000);
+
+  //Fila 7
+  FillRect(0, 96, 48, 31, 0x0000);
+  FillRect(49, 96, 48, 31, 0x0000);
+  FillRect(147, 96, 48, 31, 0x0000);
+  FillRect(196, 96, 48, 31, 0x0000);
+
+  //Fila 8
+  FillRect(0, 64, 48, 31, 0x0000);
+  FillRect(49, 64, 48, 31, 0x0000);
+  FillRect(147, 64, 48, 31, 0x0000);
+  FillRect(196, 64, 48, 31, 0x0000);
   
-  int dB = valor;
+  //Fila 9
+  FillRect(0, 32, 48, 31, 0x0000);
+  FillRect(49, 32, 48, 31, 0x0000);
+  FillRect(147, 32, 48, 31, 0x0000);
+  FillRect(196, 32, 48, 31, 0x0000);
+
+  //Fila 10
+  FillRect(0, 0, 48, 31, 0x0000);
+  FillRect(49, 0, 48, 31, 0x0000);
+  FillRect(147, 0, 48, 31, 0x0000);
+  FillRect(196, 0, 48, 31, 0x0000);
+  
+  delay(100);
+  
+}
+//***************************************************************************************************************
+// Función ReadSD
+//***************************************************************************************************************
+/*
+void readSD(void){
+  archivo = SD.open("vúmetro.txt");
+  if (archivo) {
+    Serial.println("El archivo contiene lo siguiente:");
+
+    // read from the file until there's nothing else in it:
+    while (archivo.available()) {
+      Serial.write(archivo.read());
+    }
+    // close the file:
+    archivo.close();
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening vúmetro.txt");
+  }
+  }
+
+//***************************************************************************************************************
+// Función WriteSD
+//***************************************************************************************************************
+void writeSD(void){
+    archivo = SD.open("vúmetro.txt", FILE_WRITE);
+  
+  if (archivo) {
+    Serial.print("Writing to vúmetro.txt...");
+    
+    archivo.println(valor);
+    // close the file:
+    archivo.close();
+    Serial.println("done.");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening vúmetro.txt");
+  }
+  
+  }*/
+
+//***************************************************************************************************************
+// Función BTN1
+//***************************************************************************************************************
+
+void BTN1(void){
+  for (int thisNote = 0; thisNote < 2; thisNote++) {
+
+    // to calculate the note duration, take one second 
+    // divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 1000/noteDurations[thisNote];
+    tone(buzzerPin, melody[thisNote],noteDuration);
+
+    int pauseBetweenNotes = noteDuration + 50;      //delay between pulse
+    delay(pauseBetweenNotes);
+    
+    noTone(buzzerPin);   
+  }   
+}
+
+//***************************************************************************************************************
+// Función BTN2
+//***************************************************************************************************************
+void BTN2(void){
+  for (int thisNote = 0; thisNote < 2; thisNote++) {
+
+    // to calculate the note duration, take one second 
+    // divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 1000/noteDurations[thisNote];
+    tone(buzzerPin, melody2[thisNote],noteDuration);
+
+    int pauseBetweenNotes = noteDuration + 50;      //delay between pulse
+    delay(pauseBetweenNotes);
+    
+    noTone(buzzerPin);   
+  }   
+}
+
+//***************************************************************************************************************
+// Función BTN2
+//***************************************************************************************************************
+void Pantalla(void){
+  dB = valor;
     
     if(dB > 10 && dB <= 20){
-      analogWrite(ledR, 255); 
+      analogWrite(ledR, 0); 
       analogWrite(ledA, 0);
-      analogWrite(ledV, 0);
+      analogWrite(ledV, 255);
+      datodB = "Intensidad: -22dB";
       
        //Fila 1
       FillRect(0, 288, 48, 31, 0x07E0);
       FillRect(49, 288, 48, 31, 0x07E0);
       FillRect(147, 288, 48, 31, 0x07E0);
       FillRect(196, 288, 48, 31, 0x07E0);
+      Serial.println("Intensidad: -22dB");
+
+      delay(1000);
     }
     else if(dB > 20 && dB <= 25){
-      analogWrite(ledA, 255);
       analogWrite(ledR, 0); 
-      analogWrite(ledV, 0); 
+      analogWrite(ledA, 0);
+      analogWrite(ledV, 255); 
+      datodB = "Intensidad: -16dB";
 
       //Fila 1
       FillRect(0, 288, 48, 31, 0x07E0);
@@ -329,13 +383,19 @@ void loop() {
       FillRect(49, 256, 48, 31, 0x07E0);
       FillRect(147, 256, 48, 31, 0x07E0);
       FillRect(196, 256, 48, 31, 0x07E0);
+
+      Serial.println("Intensidad: -16dB");
+
+      delay(1000);
    
     }
 
     else if(dB > 25 && dB <= 30 ){
-      analogWrite(ledV, 255);
       analogWrite(ledR, 0); 
       analogWrite(ledA, 0);
+      analogWrite(ledV, 255);
+
+      datodB = "Intensidad: -12dB";
       
         
         //Fila 1
@@ -355,9 +415,18 @@ void loop() {
         FillRect(49, 224, 48, 31, 0x07E0);
         FillRect(147, 224, 48, 31, 0x07E0);
         FillRect(196, 224, 48, 31, 0x07E0);
+
+        Serial.println("Intensidad: -12dB");
+
+        delay(1000);
     }
     
     else if (dB > 30 && dB <= 35){
+      analogWrite(ledR, 0); 
+      analogWrite(ledA, 0);
+      analogWrite(ledV, 255);
+      datodB = "Intensidad: -6dB";
+      
       //Fila 1
       FillRect(0, 288, 48, 31, 0x07E0);
       FillRect(49, 288, 48, 31, 0x07E0);
@@ -381,9 +450,19 @@ void loop() {
       FillRect(49, 192, 48, 31, 0x07E0);
       FillRect(147, 192, 48, 31, 0x07E0);
       FillRect(196, 192, 48, 31, 0x07E0);
+
+      Serial.println("Intensidad: -6dB");
+
+      delay(1000);
+      
     }
 
     else if (dB > 35 && dB <= 40){
+      analogWrite(ledR, 0); 
+      analogWrite(ledA, 0);
+      analogWrite(ledV, 255);
+      datodB = "Intensidad: -3dB";
+      
       //Fila 1
       FillRect(0, 288, 48, 31, 0x07E0);
       FillRect(49, 288, 48, 31, 0x07E0);
@@ -414,9 +493,18 @@ void loop() {
       FillRect(147, 160, 48, 31, 0x07E0);
       FillRect(196, 160, 48, 31, 0x07E0);
 
+      Serial.println("Intensidad: -3dB");
+
+      delay(1000);
+
     }
 
     else if (dB > 40 && dB <= 45){
+      analogWrite(ledR, 255); 
+      analogWrite(ledA, 0);
+      analogWrite(ledV, 255);
+      datodB = "Intensidad: 0dB";
+      
       //Fila 1
       FillRect(0, 288, 48, 31, 0x07E0);
       FillRect(49, 288, 48, 31, 0x07E0);
@@ -453,9 +541,16 @@ void loop() {
       FillRect(147, 128, 48, 31, 0x0FFF);
       FillRect(196, 128, 48, 31, 0x0FFF);
 
-  
+      Serial.println("Intensidad: 0 dB");
+
+      delay(1000);  
     }
     else if (dB > 45 && dB <= 50){
+      analogWrite(ledR, 255); 
+      analogWrite(ledA, 0);
+      analogWrite(ledV, 255);
+      datodB = "Intensidad: 3dB";
+      
       //Fila 1
       FillRect(0, 288, 48, 31, 0x07E0);
       FillRect(49, 288, 48, 31, 0x07E0);
@@ -498,10 +593,18 @@ void loop() {
       FillRect(147, 96, 48, 31, 0x0FFF);
       FillRect(196, 96, 48, 31, 0x0FFF);
 
- 
+      Serial.println("Intensidad: 3dB");
+
+      delay(1000);
+      
     }
 
     else if (dB > 50 && dB <= 55){
+      analogWrite(ledR, 255); 
+      analogWrite(ledA, 0);
+      analogWrite(ledV, 255);
+      datodB = "Intensidad: 6dB";
+      
       //Fila 1
       FillRect(0, 288, 48, 31, 0x07E0);
       FillRect(49, 288, 48, 31, 0x07E0);
@@ -549,11 +652,19 @@ void loop() {
       FillRect(49, 64, 48, 31, 0x0FFF);
       FillRect(147, 64, 48, 31, 0x0FFF);
       FillRect(196, 64, 48, 31, 0x0FFF);
+
+      Serial.println("Intensidad: 6dB");
   
- 
+      delay(1000);
+      
     }
 
     else if (dB > 55 && dB <= 60){
+      analogWrite(ledR, 255); 
+      analogWrite(ledA, 0);
+      analogWrite(ledV, 0);
+      datodB = "Intensidad: 10dB";
+      
       //Fila 1
       FillRect(0, 288, 48, 31, 0x07E0);
       FillRect(49, 288, 48, 31, 0x07E0);
@@ -608,10 +719,18 @@ void loop() {
       FillRect(147, 32, 48, 31, 0x003F);
       FillRect(196, 32, 48, 31, 0x003F);
 
- 
+      Serial.println("Intensidad:  10dB");
+
+      delay(1000);
+      
     }
 
     else if (dB >= 60){
+      analogWrite(ledR, 255); 
+      analogWrite(ledA, 0);
+      analogWrite(ledV, 0);
+      datodB = "Intensidad: 16dB";
+      
       //Fila 1
       FillRect(0, 288, 48, 31, 0x07E0);
       FillRect(49, 288, 48, 31, 0x07E0);
@@ -671,51 +790,11 @@ void loop() {
       FillRect(49, 0, 48, 31, 0x003F);
       FillRect(147, 0, 48, 31, 0x003F);
       FillRect(196, 0, 48, 31, 0x003F);
+      Serial.println("Intensidad: 16dB");
+
+      delay(1000);
+      
     }
-    
-  }
-  
-  delay(10);
-  
-  
-}
-
-//***************************************************************************************************************
-// Función BTN1
-//***************************************************************************************************************
-void BTN1(void){
-  for (int thisNote = 0; thisNote < 2; thisNote++) {
-
-    // to calculate the note duration, take one second 
-    // divided by the note type.
-    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int noteDuration = 1000/noteDurations[thisNote];
-    tone(buzzerPin, melody[thisNote],noteDuration);
-
-    int pauseBetweenNotes = noteDuration + 50;      //delay between pulse
-    delay(pauseBetweenNotes);
-    
-    noTone(buzzerPin);   
-  }   
-}
-
-//***************************************************************************************************************
-// Función BTN2
-//***************************************************************************************************************
-void BTN2(void){
-  for (int thisNote = 0; thisNote < 2; thisNote++) {
-
-    // to calculate the note duration, take one second 
-    // divided by the note type.
-    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int noteDuration = 1000/noteDurations[thisNote];
-    tone(buzzerPin, melody2[thisNote],noteDuration);
-
-    int pauseBetweenNotes = noteDuration + 50;      //delay between pulse
-    delay(pauseBetweenNotes);
-    
-    noTone(buzzerPin);   
-  }   
 }
 
 
